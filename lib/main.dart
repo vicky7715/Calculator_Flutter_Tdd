@@ -44,7 +44,22 @@ class _CalculatorPageState extends State<CalculatorPage> {
     final calculator = StringCalculator();
     setState(() {
       try {
-        _result = calculator.add(_controller.text).toString();
+        String inputText = _controller.text.trim();
+        print("Original Input: '$inputText'");
+
+        inputText = inputText.replaceAll(RegExp(r'[“”]'), '"');
+
+        if (!inputText.startsWith('"') || !inputText.endsWith('"')) {
+          throw FormatException('Input must be in quotes (e.g., "1,2,3")');
+        }
+
+        inputText = inputText.substring(1, inputText.length - 1);
+
+        print("Processed Input (quotes removed): '$inputText'");
+
+        inputText = inputText.replaceAll(RegExp(r'[;,]+'), ',');
+        print("Sanitized Input: '$inputText'");
+        _result = "Sum: ${calculator.add(inputText)}";
       } catch (e) {
         _result = 'Error: ${e.toString()}';
       }
@@ -58,18 +73,18 @@ class _CalculatorPageState extends State<CalculatorPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const Text(
+            "Enter numbers in quotes (e.g., \"1,2,3\")",
+            style: TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 16),
+          // User input field
           TextField(
             controller: _controller,
             decoration: InputDecoration(
-              labelText: 'Enter numbers',
+              labelText: 'Enter numbers in quotes (e.g., "1,2,3")',
               border: OutlineInputBorder(),
-              hintText: 'e.g. 1, 2, 3 or 1\n 2, 3',
             ),
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-             FilteringTextInputFormatter.allow(RegExp(r'["\d,]')),
-            ],
-            maxLines: null,
           ),
           SizedBox(height: 20),
           ElevatedButton(
@@ -77,10 +92,24 @@ class _CalculatorPageState extends State<CalculatorPage> {
             child: Text('Calculate'),
           ),
           SizedBox(height: 20),
-          Text(
-            'Result: $_result',
-            style: TextStyle(fontSize: 24),
-          ),
+          if (_result.isNotEmpty)
+            Card(
+              color: Colors.teal[50],
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  _result,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.teal[900],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
